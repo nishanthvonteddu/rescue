@@ -103,10 +103,10 @@ export async function placeCall(args: PlaceCallArgs): Promise<PlaceCallResult> {
     throw new Error(`Traveler phone is not valid E.164: "${phone}"`);
   }
 
-  // Global --agent must precede the subcommand for account-scoped keys.
-  const argv: string[] = [];
-  if (c.agentId) argv.push("--agent", c.agentId);
-  argv.push("call", phone, "--json");
+  // The agent is selected as the on-disk default (run `vb agent use <id>` once —
+  // setup-agent.sh does this). `vb` has no top-level --agent flag, so we rely on
+  // that stored default; `vb call <phone>` then dials via the right agent.
+  const argv: string[] = ["call", phone, "--json"];
 
   const env: NodeJS.ProcessEnv = {
     ...process.env,

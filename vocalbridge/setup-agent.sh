@@ -47,17 +47,19 @@ if [ -z "${VOCAL_BRIDGE_AGENT_ID:-}" ]; then
   echo "   → add this to .env:  VOCAL_BRIDGE_AGENT_ID=$AGENT_ID"
 else
   AGENT_ID="$VOCAL_BRIDGE_AGENT_ID"
-  echo "▸ Reusing agent: $AGENT_ID (updating prompt + config)"
-  "$VB" --agent "$AGENT_ID" prompt set --file vocalbridge/agent-prompt.txt
-  "$VB" --agent "$AGENT_ID" config set --greeting "$GREETING" --deploy-targets phone
+  echo "▸ Reusing agent: $AGENT_ID"
 fi
 
-# ---- select it (so plain `vb call` uses it) ----
-"$VB" agent use "$AGENT_ID" || true
+# ---- select it as the default (required for account keys; `vb` has no --agent flag) ----
+"$VB" agent use "$AGENT_ID"
+
+# ---- (re)apply prompt + core config ----
+"$VB" prompt set --file vocalbridge/agent-prompt.txt
+"$VB" config set --greeting "$GREETING" --deploy-targets phone
 
 # ---- outbound settings + the submit_choice HTTP tool ----
 echo "▸ Enabling outbound + wiring submit_choice → webhook…"
-"$VB" --agent "$AGENT_ID" config set \
+"$VB" config set \
   --outbound-enabled true \
   --outbound-greeting "$GREETING" \
   --outbound-wait-for-user true \
@@ -65,7 +67,7 @@ echo "▸ Enabling outbound + wiring submit_choice → webhook…"
   --api-tools-file vocalbridge/api-tools.json
 
 echo "▸ Verifying api-tools on the agent:"
-"$VB" --agent "$AGENT_ID" config get api-tools || true
+"$VB" config get api-tools || true
 
 echo
 echo "✓ Agent ready: $AGENT_ID"

@@ -58,7 +58,7 @@ export function buildAgentPrompt(
     ``,
     `Then ask: "Which would you like — one, two, or three?"`,
     ``,
-    `IMPORTANT: As soon as the traveler picks an option, call the tool "submit_choice" with the matching option id (one of: ${options.map((o) => o.id).join(", ")}). If they say a number ("two") or a flight number, map it to the right option id. After the tool call, confirm warmly: "You're all set — I've rebooked you and you'll get a confirmation shortly." Then end the call.`,
+    `RECORDING THE CHOICE (important): "submit_choice" runs in your BACKGROUND system — you cannot call it directly. As soon as the traveler picks, call submit_background_query with exactly: "Call submit_choice with optionId opt_N" — replacing opt_N with one of ${options.map((o) => o.id).join(", ")} to match their choice (map a spoken number/flight number to the right id). This runs silently; keep talking naturally and do NOT mention tools or systems. Right after, confirm warmly: "You're all set — I've rebooked you and you'll get a confirmation shortly." Then end the call.`,
     ``,
     `Keep it short and natural. Do not invent flights or prices beyond the three options above.`,
   ].join("\n");

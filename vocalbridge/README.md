@@ -53,10 +53,33 @@ When the traveler says "two", the agent calls `submit_choice{ optionId: "opt_2" 
 Vocal Bridge POSTs it to `PUBLIC_BASE_URL/api/voice/webhook`, and Person 1's
 orchestrator sees `status: picked` at `/api/voice/status`.
 
+## Two things we learned the hard way (both already baked in here)
+1. **Custom HTTP API tools are BACKGROUND-AI tools, not realtime tools.** The voice
+   model's direct tool list is fixed (`end_call`, `submit_background_query`, …) and
+   does NOT include `submit_choice`. If the prompt tells the agent to "call
+   submit_choice", it fails with *"Unknown function: submit_choice"*. Instead the
+   agent must delegate: call `submit_background_query` with an instruction like
+   *"Call submit_choice with optionId opt_2"*, and the background AI invokes the
+   HTTP tool. The agent prompt (`agent-prompt.txt`) already does this.
+2. **Each api-tool parameter needs a `location`** (`body` | `query` | `path` |
+   `header`). Without it the argument is dropped and the webhook gets an empty body
+   (→ 422). Ours uses `location: "body"` so `optionId` arrives as JSON.
+
+Validate the whole background→tool→webhook path offline (no phone call) with:
+```bash
+vb mcp test "Record the traveler's choice by calling submit_choice with optionId opt_2."
+# → our /api/voice/webhook should log {"optionId":"opt_2"} and status should flip to "picked"
+```
+
 ## Notes
 - If a real call fails or the plan isn't active, the app **auto-falls back** to the
   scripted transcript (`VOICE_AUTO_FALLBACK=true`), so the demo never dead-ends.
-- Verify the tool shape after creating the agent: `vb config get api-tools`. If
-  Vocal Bridge expects a different JSON shape than `api-tools.template.json`, edit
-  the template and re-run `setup-agent.sh`.
+- The webhook URL on the agent (`vb config get api-tools`) must match your current
+  public tunnel. Tunnel URLs change per run — re-run `setup-agent.sh` (or just
+  `vb config set --api-tools-file vocalbridge/api-tools.json`) after starting a new tunnel.
+- This session validated live against agent `Rescue Rebooking` (phone +14122036478)
+  using a **Cloudflare quick tunnel** (`cloudflared tunnel --url http://localhost:3000`)
+  because the reserved ngrok domain was already in use. cloudflared needs no account
+  and avoids the ngrok one-agent limit — a good default.
 - Watch a live call: `vb config set --debug-mode true` then `vb debug`.
+- Tear down the provisioned agent/number when done: `vb agent delete <id>`.

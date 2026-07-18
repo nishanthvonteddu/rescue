@@ -16,8 +16,8 @@ export VOCAL_BRIDGE_API_URL="${VOCAL_BRIDGE_BASE_URL:-https://vocalbridgeai.com}
 PHONE="${1:-${DEMO_TRAVELER_PHONE:-}}"
 : "${PHONE:?Pass a phone number (E.164) or set DEMO_TRAVELER_PHONE in .env}"
 
-AGENT_ARGS=()
-[ -n "${VOCAL_BRIDGE_AGENT_ID:-}" ] && AGENT_ARGS=(--agent "$VOCAL_BRIDGE_AGENT_ID")
+# Ensure the right agent is the selected default (no top-level --agent flag exists).
+[ -n "${VOCAL_BRIDGE_AGENT_ID:-}" ] && "$VB" agent use "$VOCAL_BRIDGE_AGENT_ID" >/dev/null 2>&1 || true
 
 echo "▸ Calling $PHONE via agent ${VOCAL_BRIDGE_AGENT_ID:-<default>}…"
-"$VB" "${AGENT_ARGS[@]}" call "$PHONE" --json
+"$VB" call "$PHONE" --json

@@ -102,8 +102,22 @@ async function readPayload(req: Request): Promise<unknown> {
 }
 
 export async function POST(req: Request) {
+  const url = new URL(req.url);
+  const query = Object.fromEntries(url.searchParams.entries());
   const payload = await readPayload(req);
-  const raw = extractPick(payload);
+
+  // Log the raw shape so we can see exactly what Vocal Bridge sends.
+  console.log(
+    "[voice/webhook] incoming",
+    JSON.stringify({
+      ct: req.headers.get("content-type"),
+      query,
+      payload,
+    }).slice(0, 800),
+  );
+
+  // Look in the body AND the query string (some tool executors send params there).
+  const raw = extractPick(payload) ?? extractPick(query);
 
   const state = getVoiceState();
   // Fall back to the canned options if the store hasn't been seeded (e.g. the
