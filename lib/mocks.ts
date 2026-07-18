@@ -3,7 +3,7 @@ import { DisruptionEvent, Traveler, RebookOption, ReceiptExtract, ReceiptClaim, 
 export const mockTraveler: Traveler = {
   name: "Alex Johnson",
   phone: "+14155550123",
-  paypalId: "alex.traveler@example.com",
+  paypalId: process.env.PAYPAL_RECEIVER_EMAIL || "alex.traveler@example.com",
   homeAirport: "DFW"
 };
 
