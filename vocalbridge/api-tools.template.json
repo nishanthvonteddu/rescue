@@ -1,0 +1,30 @@
+{
+  "tools": [
+    {
+      "name": "submit_choice",
+      "description": "Record the rebooking option the traveler chose. Call this as soon as they pick one (by number, word, or flight number).",
+      "method": "POST",
+      "url": "$PUBLIC_BASE_URL/api/voice/webhook",
+      "auth": {
+        "type": "none"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "optionId": {
+            "type": "string",
+            "enum": [
+              "opt_1",
+              "opt_2",
+              "opt_3"
+            ],
+            "description": "The chosen option id, e.g. opt_2"
+          }
+        },
+        "required": [
+          "optionId"
+        ]
+      }
+    }
+  ]
+}

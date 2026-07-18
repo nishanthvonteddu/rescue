@@ -21,6 +21,9 @@ import { resetVoiceState, setVoiceState, resolvePick } from "@/lib/store";
 import { buildTranscript } from "@/lib/voiceScript";
 import { placeCall, isConfigured } from "@/lib/vocalbridge";
 
+// Real mode shells out to the `vb` CLI, so this route must run on Node, not Edge.
+export const runtime = "nodejs";
+
 type Mode = "real" | "mock";
 
 function pickMode(bodyMode: unknown, url: URL): Mode {
