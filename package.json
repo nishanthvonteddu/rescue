@@ -1,12 +1,14 @@
 {
-  "name": "disruption-rescue",
+  "name": "rescue",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "serve:mjs": "node server.mjs",
+    "test:person-3": "node test-person-3.mjs"
   },
   "dependencies": {
     "next": "^15.5.20",

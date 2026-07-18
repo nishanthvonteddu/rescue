@@ -4,20 +4,20 @@
 // slices combine on the first try.
 
 export interface Flight {
-  flightNumber: string; // "AA123"
-  carrier: string; // "American Airlines"
-  date: string; // "2026-07-18"
-  origin: string; // "DFW"
-  destination: string; // "LGA"
-  scheduledDep: string; // ISO 8601
-  scheduledArr: string; // ISO 8601
+  flightNumber: string;   // "AA123"
+  carrier: string;        // "American Airlines"
+  date: string;           // "2026-07-18"
+  origin: string;         // "DFW"
+  destination: string;    // "LGA"
+  scheduledDep: string;   // ISO 8601
+  scheduledArr: string;   // ISO 8601
 }
 
 export interface Traveler {
   name: string;
-  phone: string; // E.164, e.g. "+14155550123"
-  paypalId: string; // sandbox receiver email
-  homeAirport: string; // "DFW"
+  phone: string;          // E.164, e.g. "+14155550123"
+  paypalId: string;       // sandbox receiver email
+  homeAirport: string;    // "DFW"
 }
 
 export interface DisruptionEvent {
@@ -28,11 +28,11 @@ export interface DisruptionEvent {
 }
 
 export interface RebookOption {
-  id: string; // "opt_1"
+  id: string;             // "opt_1"
   carrier: string;
   flightNumber: string;
-  depTime: string; // ISO
-  arrTime: string; // ISO
+  depTime: string;        // ISO
+  arrTime: string;        // ISO
   fareDifference: number; // USD, 0 for a free controllable rebook
 }
 
@@ -44,15 +44,15 @@ export interface Confirmation {
 
 export interface ReceiptExtract {
   merchant: string;
-  date: string; // "2026-07-18"
-  total: number; // USD
+  date: string;                    // "2026-07-18"
+  total: number;                   // USD
   category: "hotel" | "meal" | "ground_transport" | "other";
 }
 
 export interface ReceiptClaim {
   items: ReceiptExtract[];
   owedTotal: number;
-  commitmentsMet: string[]; // ["hotel","meal"]
+  commitmentsMet: string[];        // ["hotel","meal"]
 }
 
 export interface PayoutResult {

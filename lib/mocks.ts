@@ -1,14 +1,75 @@
-// /lib/mocks.ts — shared deterministic demo data.
-// Person 1 builds the UI against these. Person 2 (rebook) reads `rebookOptions`.
+// /lib/mocks.ts — shared deterministic demo data (Person 2 + Person 3, merged).
 // Keep this deterministic so the demo runs the same every time.
+//
+// Two naming sets coexist:
+//   - Person 3 uses  mock*  (mockTraveler, mockDisruptionEvent, mockRebookOptions, mockSampleReceipts)
+//   - Person 2 uses  sample*/rebookOptions  (sampleFlight, sampleTraveler, sampleEvent, rebookOptions)
+// They point at the same story; both are kept so neither slice's imports break.
 
-import type {
+import {
   DisruptionEvent,
   Flight,
   RebookOption,
+  ReceiptExtract,
   Traveler,
 } from "./contracts";
 
+// ─── Person 3's mocks ─────────────────────────────────────────────────────────
+export const mockTraveler: Traveler = {
+  name: "Alex Johnson",
+  phone: "+14155550123",
+  paypalId: process.env.PAYPAL_RECEIVER_EMAIL || "alex.traveler@example.com",
+  homeAirport: "DFW",
+};
+
+export const mockDisruptionEvent: DisruptionEvent = {
+  flight: {
+    flightNumber: "AA123",
+    carrier: "American Airlines",
+    date: "2026-07-18",
+    origin: "DFW",
+    destination: "LGA",
+    scheduledDep: "2026-07-18T18:30:00Z",
+    scheduledArr: "2026-07-18T22:45:00Z",
+  },
+  traveler: mockTraveler,
+  reason: "controllable_cancellation",
+  strandedOvernight: true,
+};
+
+export const mockRebookOptions: RebookOption[] = [
+  {
+    id: "opt_1",
+    carrier: "American Airlines",
+    flightNumber: "AA456",
+    depTime: "2026-07-19T06:10:00Z",
+    arrTime: "2026-07-19T10:30:00Z",
+    fareDifference: 0,
+  },
+  {
+    id: "opt_2",
+    carrier: "American Airlines",
+    flightNumber: "AA512",
+    depTime: "2026-07-19T08:45:00Z",
+    arrTime: "2026-07-19T13:05:00Z",
+    fareDifference: 0,
+  },
+  {
+    id: "opt_3",
+    carrier: "American Airlines",
+    flightNumber: "AA789",
+    depTime: "2026-07-19T07:00:00Z",
+    arrTime: "2026-07-19T12:40:00Z",
+    fareDifference: 45,
+  },
+];
+
+export const mockSampleReceipts: ReceiptExtract[] = [
+  { merchant: "Hilton DFW Airport", date: "2026-07-18", total: 189, category: "hotel" },
+  { merchant: "Olive Garden", date: "2026-07-18", total: 58, category: "meal" },
+];
+
+// ─── Person 2's mocks (rebook + voice) ────────────────────────────────────────
 // The flight that gets cancelled in the golden path.
 export const sampleFlight: Flight = {
   flightNumber: "AA123",
@@ -20,17 +81,18 @@ export const sampleFlight: Flight = {
   scheduledArr: "2026-07-18T21:55:00-04:00", // 9:55pm EDT into LGA
 };
 
-// The traveler we call. Set `phone` to your own number to test the real call.
-// (Person 1 can override phone/paypalId from the shared .env for the live demo.)
+// The traveler we call. Set DEMO_TRAVELER_PHONE to your own number to test the call.
 export const sampleTraveler: Traveler = {
   name: "Alex Rivera",
   phone: process.env.DEMO_TRAVELER_PHONE || "+14155550123",
-  paypalId: process.env.DEMO_TRAVELER_PAYPAL || "sb-buyer@example.com",
+  paypalId:
+    process.env.DEMO_TRAVELER_PAYPAL ||
+    process.env.PAYPAL_RECEIVER_EMAIL ||
+    "sb-buyer@example.com",
   homeAirport: "DFW",
 };
 
-// The disruption that kicks off the whole flow (the "Simulate Cancellation" button
-// builds one of these).
+// The disruption that kicks off the flow (the "Simulate Cancellation" button builds one).
 export const sampleEvent: DisruptionEvent = {
   flight: sampleFlight,
   traveler: sampleTraveler,
@@ -38,12 +100,9 @@ export const sampleEvent: DisruptionEvent = {
   strandedOvernight: true,
 };
 
-// ---------------------------------------------------------------------------
-// Person 2's mocked "Sabre" search results.
-// 3 believable American Airlines rebooking options, DFW -> LGA, same day.
+// Person 2's mocked "Sabre" search results — 3 believable AA options, DFW -> LGA.
 // Controllable cancellation => same-airline rebooking is free (fareDifference 0),
 // which matches the DOT-commitment story. opt_3 is a partner routing with a delta.
-// ---------------------------------------------------------------------------
 export const rebookOptions: RebookOption[] = [
   {
     id: "opt_1",
