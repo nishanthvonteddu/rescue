@@ -5,7 +5,12 @@
 // reply with a short line the voice agent can read back to confirm.
 
 import { NextResponse } from "next/server";
-import { getVoiceState, setVoiceState, resolvePick } from "@/lib/store";
+import {
+  getVoiceState,
+  setVoiceState,
+  resolvePick,
+  INSTANCE_ID,
+} from "@/lib/store";
 import { rebookOptions } from "@/lib/mocks";
 import { fmtTime } from "@/lib/voiceScript";
 
@@ -104,6 +109,15 @@ async function readPayload(req: Request): Promise<unknown> {
 export async function POST(req: Request) {
   const url = new URL(req.url);
   const query = Object.fromEntries(url.searchParams.entries());
+
+  // Optional shared-secret guard. When VOICE_WEBHOOK_TOKEN is set, the hosted
+  // agent's tool URL carries ?token=… (rendered by the sync) and we reject
+  // anything else — this endpoint is on a public tunnel.
+  const requiredToken = process.env.VOICE_WEBHOOK_TOKEN;
+  if (requiredToken && query.token !== requiredToken) {
+    return NextResponse.json({ ok: false, error: "bad token" }, { status: 401 });
+  }
+
   const payload = await readPayload(req);
 
   // Log the raw shape so we can see exactly what Vocal Bridge sends.
@@ -137,15 +151,31 @@ export async function POST(req: Request) {
     );
   }
 
+  // A spoken confirmation the agent can read back to the traveler.
+  const spoken = `Got it — I've booked you on ${chosen.carrier} ${chosen.flightNumber}, arriving ${fmtTime(chosen.arrTime)}. You're all set.`;
+
+  // On a real call, reflect the live pick into the on-screen transcript right
+  // away (the watcher swaps in the full real transcript once the call ends).
+  const idx = options.findIndex((o) => o.id === chosen.id);
+  const liveLines =
+    state.mode === "real"
+      ? [
+          ...state.transcript,
+          {
+            speaker: "traveler" as const,
+            text: `(live pick) Option ${idx + 1} — ${chosen.flightNumber}.`,
+          },
+          { speaker: "agent" as const, text: spoken },
+        ]
+      : state.transcript;
+
   setVoiceState({
     status: "picked",
     chosenOptionId: chosen.id,
     chosenOption: chosen,
     options,
+    transcript: liveLines,
   });
-
-  // A spoken confirmation the agent can read back to the traveler.
-  const spoken = `Got it — I've booked you on ${chosen.carrier} ${chosen.flightNumber}, arriving ${fmtTime(chosen.arrTime)}. You're all set.`;
 
   return NextResponse.json({
     ok: true,
@@ -158,7 +188,12 @@ export async function POST(req: Request) {
   });
 }
 
-// Health check / GET probe.
+// Health check / GET probe. instanceId lets the live-call preflight prove the
+// public tunnel terminates at THIS server process.
 export async function GET() {
-  return NextResponse.json({ ok: true, endpoint: "voice/webhook" });
+  return NextResponse.json({
+    ok: true,
+    endpoint: "voice/webhook",
+    instanceId: INSTANCE_ID,
+  });
 }

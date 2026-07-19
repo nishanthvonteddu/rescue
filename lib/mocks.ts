@@ -100,6 +100,45 @@ export const sampleEvent: DisruptionEvent = {
   strandedOvernight: true,
 };
 
+// ─── Route selection (product mode) ──────────────────────────────────────────
+// Airports the dashboard offers for the simulation. code -> display name.
+export const AIRPORTS: Record<string, string> = {
+  DFW: "Dallas–Fort Worth",
+  LGA: "New York LaGuardia",
+  JFK: "New York JFK",
+  SFO: "San Francisco",
+  LAX: "Los Angeles",
+  ORD: "Chicago O'Hare",
+  ATL: "Atlanta",
+  MIA: "Miami",
+  SEA: "Seattle",
+  BOS: "Boston",
+  DEN: "Denver",
+  AUS: "Austin",
+};
+
+// Build a DisruptionEvent for any route, dated today — the cancelled-flight
+// premise stays AA123, but everything downstream (Sabre search, voice, claim)
+// keys off the chosen airports.
+export function makeEvent(origin: string, destination: string): DisruptionEvent {
+  const o = AIRPORTS[origin] ? origin : "DFW";
+  const d = AIRPORTS[destination] && destination !== o ? destination : o === "LGA" ? "DFW" : "LGA";
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    flight: {
+      ...sampleFlight,
+      origin: o,
+      destination: d,
+      date: today,
+      scheduledDep: `${today}T17:30:00`,
+      scheduledArr: `${today}T21:55:00`,
+    },
+    traveler: sampleTraveler,
+    reason: "controllable_cancellation",
+    strandedOvernight: true,
+  };
+}
+
 // Person 2's mocked "Sabre" search results — 3 believable AA options, DFW -> LGA.
 // Controllable cancellation => same-airline rebooking is free (fareDifference 0),
 // which matches the DOT-commitment story. opt_3 is a partner routing with a delta.

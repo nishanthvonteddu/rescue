@@ -19,6 +19,9 @@ export interface VoiceState {
   chosenOptionId: string | null; // what the traveler said ("opt_2")
   chosenOption: RebookOption | null; // resolved option object
   transcript: TranscriptLine[]; // scripted or live transcript for the UI
+  callStatus: string | null; // provider lifecycle: dialing | in_progress | completed | failed | abandoned
+  startedAt: number | null; // epoch ms when the real call was placed
+  failReason: string | null; // why status became "failed" (shown on the dashboard)
   updatedAt: number; // epoch ms of last change
 }
 
@@ -36,12 +39,26 @@ function freshState(): VoiceState {
     chosenOptionId: null,
     chosenOption: null,
     transcript: [],
+    callStatus: null,
+    startedAt: null,
+    failReason: null,
     updatedAt: Date.now(),
   };
 }
 
-const g = globalThis as unknown as { __voiceState?: VoiceState };
+const g = globalThis as unknown as {
+  __voiceState?: VoiceState;
+  __voiceInstanceId?: string;
+};
 if (!g.__voiceState) g.__voiceState = freshState();
+// Per-process id. The real-call preflight fetches our own webhook THROUGH the
+// public tunnel and compares this id, proving the tunnel terminates at this
+// exact server (not a dead tunnel or someone else's laptop).
+if (!g.__voiceInstanceId) {
+  g.__voiceInstanceId = `srv_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export const INSTANCE_ID: string = g.__voiceInstanceId;
 
 export function getVoiceState(): VoiceState {
   return g.__voiceState!;

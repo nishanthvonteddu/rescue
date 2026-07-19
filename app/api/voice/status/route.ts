@@ -18,6 +18,9 @@ export async function GET() {
     chosenOption: s.chosenOption,
     options: s.options,
     transcript: s.transcript,
+    callStatus: s.callStatus,
+    startedAt: s.startedAt,
+    failReason: s.failReason,
     updatedAt: s.updatedAt,
   });
 }

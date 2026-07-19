@@ -8,7 +8,9 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "serve:mjs": "node server.mjs",
-    "test:person-3": "node test-person-3.mjs"
+    "test:person-3": "node test-person-3.mjs",
+    "voice:sync": "bash vocalbridge/sync-webhook.sh",
+    "voice:tunnel": "bash vocalbridge/start-tunnel.sh"
   },
   "dependencies": {
     "next": "^15.5.20",

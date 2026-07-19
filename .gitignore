@@ -29,3 +29,4 @@ next-env.d.ts
 
 # rendered from api-tools.template.json by setup-agent.sh (holds a transient tunnel URL)
 vocalbridge/api-tools.json
+vocalbridge/.tunnel.log

@@ -34,6 +34,12 @@ export interface RebookOption {
   depTime: string;        // ISO
   arrTime: string;        // ISO
   fareDifference: number; // USD, 0 for a free controllable rebook
+  // Optional enrichment from live Sabre (absent on mock/fallback data):
+  seatsLeft?: number;     // seats remaining at this fare (min across segments)
+  cabin?: string;         // cabin code, e.g. "Y"
+  bookingCode?: string;   // booking class, e.g. "U"
+  checkedBags?: number;   // free checked bags included
+  priceTotal?: number;    // real total fare USD
 }
 
 export interface Confirmation {

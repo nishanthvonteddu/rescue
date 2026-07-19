@@ -71,12 +71,31 @@ vb mcp test "Record the traveler's choice by calling submit_choice with optionId
 # → our /api/voice/webhook should log {"optionId":"opt_2"} and status should flip to "picked"
 ```
 
+## Keeping the hosted agent in sync (the part that used to bite)
+The `submit_choice` webhook URL lives **on the hosted agent**, and tunnel URLs
+rotate per run. Three layers keep them in sync now:
+1. **Self-healing preflight** — every real call via `/api/voice/call` first checks
+   the hosted URL against `PUBLIC_BASE_URL` and re-pushes it if it drifted, then
+   proves the tunnel loops back to *this* server (instance-id echo) before dialing.
+   The dashboard's "live phone call" checkbox runs the same preflight and shows
+   ✓/✗ before you ever dial.
+2. **`npm run voice:tunnel`** — ensures a healthy Cloudflare quick tunnel, writes
+   it to `.env`, and syncs the hosted agent. One command after a laptop move.
+3. **`npm run voice:sync`** — just the hosted-agent push, if you changed
+   `PUBLIC_BASE_URL` or `VOICE_WEBHOOK_TOKEN` by hand.
+
+During a live call the server **watches the Vocal Bridge session** (`vb logs
+show`): the dashboard tracks dialing → on the call → pick (up to 4 minutes, not
+15 seconds), and once the call ends the **real transcript** replaces the
+placeholder. If the call ends with no recorded pick, the state flips to
+`failed` and the UI falls back to the scripted pick — labeled as a fallback.
+
+Optionally set `VOICE_WEBHOOK_TOKEN` in `.env` to require `?token=…` on the
+public webhook (the sync renders it into the hosted tool URL).
+
 ## Notes
 - If a real call fails or the plan isn't active, the app **auto-falls back** to the
   scripted transcript (`VOICE_AUTO_FALLBACK=true`), so the demo never dead-ends.
-- The webhook URL on the agent (`vb config get api-tools`) must match your current
-  public tunnel. Tunnel URLs change per run — re-run `setup-agent.sh` (or just
-  `vb config set --api-tools-file vocalbridge/api-tools.json`) after starting a new tunnel.
 - This session validated live against agent `Rescue Rebooking` (phone +14122036478)
   using a **Cloudflare quick tunnel** (`cloudflared tunnel --url http://localhost:3000`)
   because the reserved ngrok domain was already in use. cloudflared needs no account
